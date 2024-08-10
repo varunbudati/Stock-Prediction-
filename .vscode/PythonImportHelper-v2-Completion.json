@@ -61,23 +61,6 @@
         "documentation": {}
     },
     {
-        "label": "SentimentIntensityAnalyzer",
-        "importPath": "nltk.sentiment",
-        "description": "nltk.sentiment",
-        "isExtraImport": true,
-        "detail": "nltk.sentiment",
-        "documentation": {}
-    },
-    {
-        "label": "nltk",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "nltk",
-        "description": "nltk",
-        "detail": "nltk",
-        "documentation": {}
-    },
-    {
         "label": "requests",
         "kind": 6,
         "isExtraImport": true,
@@ -118,7 +101,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def predict_next_day(df):\n    last_price = df['Close'].iloc[-1]\n    sma20 = df['SMA20'].iloc[-1]\n    sma50 = df['SMA50'].iloc[-1]\n    # Simple prediction based on the difference between SMAs\n    if sma20 > sma50:\n        prediction = last_price * 1.01  # Predict 1% increase\n    else:\n        prediction = last_price * 0.99  # Predict 1% decrease\n    return prediction",
+        "peekOfCode": "def predict_next_day(df):\n    last_price = df['Close'].iloc[-1]\n    sma20 = df['SMA20'].iloc[-1]\n    sma50 = df['SMA50'].iloc[-1]\n    if sma20 > sma50:\n        prediction = last_price * 1.01  # Predict 1% increase\n    else:\n        prediction = last_price * 0.99  # Predict 1% decrease\n    return prediction\ndef fetch_news(ticker):",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -127,16 +110,16 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def fetch_news(ticker):\n    # This is a placeholder. In a real app, you'd use a proper news API\n    url = f\"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_API_KEY\"\n    response = requests.get(url)\n    if response.status_code == 200:\n        return response.json()['articles']\n    return []\ndef analyze_sentiment(text):\n    sia = SentimentIntensityAnalyzer()\n    return sia.polarity_scores(text)['compound']",
+        "peekOfCode": "def fetch_news(ticker):\n    # This is a placeholder. In a real app, you'd use a proper news API\n    url = f\"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_API_KEY\"\n    response = requests.get(url)\n    if response.status_code == 200:\n        return response.json()['articles']\n    return []\ndef simple_sentiment_analysis(text):\n    positive_words = ['up', 'rise', 'gain', 'positive', 'good', 'increase', 'higher']\n    negative_words = ['down', 'fall', 'loss', 'negative', 'bad', 'decrease', 'lower']",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
     {
-        "label": "analyze_sentiment",
+        "label": "simple_sentiment_analysis",
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def analyze_sentiment(text):\n    sia = SentimentIntensityAnalyzer()\n    return sia.polarity_scores(text)['compound']\ndef main():\n    st.title('NVIDIA Stock Analysis and Prediction')\n    ticker = st.sidebar.text_input('Stock Ticker', value='NVDA')\n    start_date = st.sidebar.date_input('Start Date', datetime.now() - timedelta(days=365))\n    end_date = st.sidebar.date_input('End Date', datetime.now())\n    df = fetch_stock_data(ticker, start_date, end_date)\n    df = calculate_technical_indicators(df)",
+        "peekOfCode": "def simple_sentiment_analysis(text):\n    positive_words = ['up', 'rise', 'gain', 'positive', 'good', 'increase', 'higher']\n    negative_words = ['down', 'fall', 'loss', 'negative', 'bad', 'decrease', 'lower']\n    words = text.lower().split()\n    positive_count = sum(word in positive_words for word in words)\n    negative_count = sum(word in negative_words for word in words)\n    if positive_count > negative_count:\n        return 1\n    elif negative_count > positive_count:\n        return -1",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },

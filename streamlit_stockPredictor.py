@@ -4,12 +4,7 @@ import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
-from nltk.sentiment import SentimentIntensityAnalyzer
-import nltk
 import requests
-
-# Download NLTK data (run this once)
-nltk.download('vader_lexicon')
 
 def fetch_stock_data(ticker, start_date, end_date):
     stock_data = yf.download(ticker, start=start_date, end=end_date)
@@ -18,7 +13,6 @@ def fetch_stock_data(ticker, start_date, end_date):
 def calculate_technical_indicators(df):
     df['SMA20'] = df['Close'].rolling(window=20).mean()
     df['SMA50'] = df['Close'].rolling(window=50).mean()
-    
     return df
 
 def plot_stock_data(df):
@@ -34,7 +28,6 @@ def predict_next_day(df):
     sma20 = df['SMA20'].iloc[-1]
     sma50 = df['SMA50'].iloc[-1]
     
-    # Simple prediction based on the difference between SMAs
     if sma20 > sma50:
         prediction = last_price * 1.01  # Predict 1% increase
     else:
@@ -50,9 +43,20 @@ def fetch_news(ticker):
         return response.json()['articles']
     return []
 
-def analyze_sentiment(text):
-    sia = SentimentIntensityAnalyzer()
-    return sia.polarity_scores(text)['compound']
+def simple_sentiment_analysis(text):
+    positive_words = ['up', 'rise', 'gain', 'positive', 'good', 'increase', 'higher']
+    negative_words = ['down', 'fall', 'loss', 'negative', 'bad', 'decrease', 'lower']
+    
+    words = text.lower().split()
+    positive_count = sum(word in positive_words for word in words)
+    negative_count = sum(word in negative_words for word in words)
+    
+    if positive_count > negative_count:
+        return 1
+    elif negative_count > positive_count:
+        return -1
+    else:
+        return 0
 
 def main():
     st.title('NVIDIA Stock Analysis and Prediction')
@@ -75,11 +79,11 @@ def main():
         next_day_price = predict_next_day(df)
         st.write(f"Predicted price for next trading day: ${next_day_price:.2f}")
     
-    # News Sentiment Analysis
+    # Simple Sentiment Analysis
     st.subheader('News Sentiment Analysis')
     news = fetch_news(ticker)
     if news:
-        sentiments = [analyze_sentiment(article['title'] + ' ' + article['description']) for article in news[:5]]
+        sentiments = [simple_sentiment_analysis(article['title'] + ' ' + article['description']) for article in news[:5]]
         avg_sentiment = sum(sentiments) / len(sentiments)
         st.write(f"Average sentiment score: {avg_sentiment:.2f}")
         st.write("Recent news headlines:")
