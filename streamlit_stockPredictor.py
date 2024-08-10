@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
+import math
+import random
 
 def fetch_stock_data(ticker, start_date, end_date):
     try:
@@ -21,15 +22,15 @@ def calculate_technical_indicators(df):
     df['SMA20'] = df['Close'].rolling(window=20).mean()
     df['SMA50'] = df['Close'].rolling(window=50).mean()
     df['Daily_Return'] = df['Close'].pct_change()
-    df['Volatility'] = df['Daily_Return'].rolling(window=20).std() * np.sqrt(252)
+    df['Volatility'] = df['Daily_Return'].rolling(window=20).apply(lambda x: x.std() * math.sqrt(252))
     return df
 
 def simple_linear_regression(x, y):
     n = len(x)
     sum_x = sum(x)
     sum_y = sum(y)
-    sum_xy = sum([x[i] * y[i] for i in range(n)])
-    sum_xx = sum([x[i] ** 2 for i in range(n)])
+    sum_xy = sum(x[i] * y[i] for i in range(n))
+    sum_xx = sum(x[i] ** 2 for i in range(n))
     
     slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x ** 2)
     intercept = (sum_y - slope * sum_x) / n
@@ -37,23 +38,23 @@ def simple_linear_regression(x, y):
     return slope, intercept
 
 def predict_future_prices(df, days=30, manual_volatility=None, manual_trend=None):
-    x = np.array(range(len(df)))
-    y = df['Close'].values
+    x = list(range(len(df)))
+    y = df['Close'].tolist()
     
     slope, intercept = simple_linear_regression(x, y)
     
     last_date = df.index[-1]
-    future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days)
-    future_x = np.array(range(len(df), len(df) + days))
-    future_prices = slope * future_x + intercept
+    future_dates = [last_date + timedelta(days=i+1) for i in range(days)]
+    future_x = list(range(len(df), len(df) + days))
+    future_prices = [slope * xi + intercept for xi in future_x]
     
     if manual_volatility is not None:
-        noise = np.random.normal(0, manual_volatility * df['Close'].iloc[-1], days)
-        future_prices += noise
+        noise = [random.gauss(0, manual_volatility * df['Close'].iloc[-1]) for _ in range(days)]
+        future_prices = [p + n for p, n in zip(future_prices, noise)]
     
     if manual_trend is not None:
-        trend = np.linspace(0, manual_trend, days)
-        future_prices += trend
+        trend = [manual_trend * i / days for i in range(days)]
+        future_prices = [p + t for p, t in zip(future_prices, trend)]
     
     future_df = pd.DataFrame({
         'Date': future_dates,
@@ -132,7 +133,7 @@ def analyze_competition(stock):
         return f"Unable to analyze competition due to an error: {str(e)}"
 
 def main():
-    st.title('Simplified Stock Analysis and Prediction with Manual Input')
+    st.title('Streamlit-Compatible Stock Analysis and Prediction')
     
     ticker = st.sidebar.text_input('Stock Ticker', value='AAPL')
     start_date = st.sidebar.date_input('Start Date', datetime.now() - timedelta(days=365))
