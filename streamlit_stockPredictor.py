@@ -5,8 +5,8 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
 from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
 import requests
@@ -38,37 +38,31 @@ def plot_stock_data(df):
     fig.update_layout(title='Stock Price and Moving Averages', xaxis_title='Date', yaxis_title='Price')
     return fig
 
-def create_sequences(data, seq_length):
-    sequences = []
-    for i in range(len(data) - seq_length):
-        seq = data[i:i+seq_length]
-        sequences.append(seq)
-    return np.array(sequences)
+def prepare_data_for_model(df):
+    df['Date'] = df.index
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Day'] = df['Date'].dt.day
+    df['Month'] = df['Date'].dt.month
+    df['Year'] = df['Date'].dt.year
+    df['Weekday'] = df['Date'].dt.weekday
+    
+    features = ['Open', 'High', 'Low', 'Volume', 'SMA20', 'SMA50', 'RSI', 'Day', 'Month', 'Year', 'Weekday']
+    X = df[features]
+    y = df['Close']
+    
+    return X, y
 
-def train_lstm_model(data, seq_length=60, epochs=50, batch_size=32):
-    scaler = MinMaxScaler()
-    scaled_data = scaler.fit_transform(data.reshape(-1, 1))
-    
-    X, y = create_sequences(scaled_data, seq_length), scaled_data[seq_length:]
-    X = X.reshape((X.shape[0], X.shape[1], 1))
-    
-    model = Sequential([
-        LSTM(50, return_sequences=True, input_shape=(seq_length, 1)),
-        LSTM(50, return_sequences=False),
-        Dense(1)
-    ])
-    model.compile(optimizer='adam', loss='mse')
-    model.fit(X, y, epochs=epochs, batch_size=batch_size, verbose=0)
-    
-    return model, scaler
+def train_random_forest_model(X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    return model
 
-def predict_next_day(model, data, scaler, seq_length=60):
-    last_sequence = data[-seq_length:].reshape(1, seq_length, 1)
-    predicted = model.predict(last_sequence)
-    return scaler.inverse_transform(predicted)[0, 0]
+def predict_next_day(model, last_data):
+    return model.predict(last_data)
 
 def fetch_news(ticker):
-    # Find and use a proper news API
+    # This is a placeholder. In a real app, you'd use a proper news API
     url = f"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_API_KEY"
     response = requests.get(url)
     if response.status_code == 200:
@@ -97,12 +91,15 @@ def main():
     st.subheader('Relative Strength Index (RSI)')
     st.line_chart(df['RSI'])
     
-    # LSTM Prediction
+    # Random Forest Prediction
     st.subheader('Stock Price Prediction')
     if st.button('Train Model and Predict'):
-        model, scaler = train_lstm_model(df['Close'].values)
-        next_day_price = predict_next_day(model, df['Close'].values, scaler)
-        st.write(f"Predicted price for next trading day: ${next_day_price:.2f}")
+        X, y = prepare_data_for_model(df)
+        model = train_random_forest_model(X, y)
+        last_data = X.iloc[-1:].copy()
+        last_data['Day'] += 1  # Predict for the next day
+        next_day_price = predict_next_day(model, last_data)
+        st.write(f"Predicted price for next trading day: ${next_day_price[0]:.2f}")
     
     # News Sentiment Analysis
     st.subheader('News Sentiment Analysis')
