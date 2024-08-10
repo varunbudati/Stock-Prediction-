@@ -1,0 +1,202 @@
+[
+    {
+        "label": "streamlit",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "streamlit",
+        "description": "streamlit",
+        "detail": "streamlit",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "yfinance",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "yfinance",
+        "description": "yfinance",
+        "detail": "yfinance",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "plotly.graph_objects",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "plotly.graph_objects",
+        "description": "plotly.graph_objects",
+        "detail": "plotly.graph_objects",
+        "documentation": {}
+    },
+    {
+        "label": "MinMaxScaler",
+        "importPath": "sklearn.preprocessing",
+        "description": "sklearn.preprocessing",
+        "isExtraImport": true,
+        "detail": "sklearn.preprocessing",
+        "documentation": {}
+    },
+    {
+        "label": "Sequential",
+        "importPath": "tensorflow.keras.models",
+        "description": "tensorflow.keras.models",
+        "isExtraImport": true,
+        "detail": "tensorflow.keras.models",
+        "documentation": {}
+    },
+    {
+        "label": "LSTM",
+        "importPath": "tensorflow.keras.layers",
+        "description": "tensorflow.keras.layers",
+        "isExtraImport": true,
+        "detail": "tensorflow.keras.layers",
+        "documentation": {}
+    },
+    {
+        "label": "Dense",
+        "importPath": "tensorflow.keras.layers",
+        "description": "tensorflow.keras.layers",
+        "isExtraImport": true,
+        "detail": "tensorflow.keras.layers",
+        "documentation": {}
+    },
+    {
+        "label": "SentimentIntensityAnalyzer",
+        "importPath": "nltk.sentiment",
+        "description": "nltk.sentiment",
+        "isExtraImport": true,
+        "detail": "nltk.sentiment",
+        "documentation": {}
+    },
+    {
+        "label": "nltk",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "nltk",
+        "description": "nltk",
+        "detail": "nltk",
+        "documentation": {}
+    },
+    {
+        "label": "requests",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "requests",
+        "description": "requests",
+        "detail": "requests",
+        "documentation": {}
+    },
+    {
+        "label": "fetch_stock_data",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def fetch_stock_data(ticker, start_date, end_date):\n    stock_data = yf.download(ticker, start=start_date, end=end_date)\n    return stock_data\ndef calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    delta = df['Close'].diff()\n    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()\n    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()\n    rs = gain / loss",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_technical_indicators",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    delta = df['Close'].diff()\n    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()\n    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()\n    rs = gain / loss\n    df['RSI'] = 100 - (100 / (1 + rs))\n    return df\ndef plot_stock_data(df):",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "plot_stock_data",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def plot_stock_data(df):\n    fig = go.Figure()\n    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))\n    fig.update_layout(title='Stock Price and Moving Averages', xaxis_title='Date', yaxis_title='Price')\n    return fig\ndef create_sequences(data, seq_length):\n    sequences = []\n    for i in range(len(data) - seq_length):",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "create_sequences",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def create_sequences(data, seq_length):\n    sequences = []\n    for i in range(len(data) - seq_length):\n        seq = data[i:i+seq_length]\n        sequences.append(seq)\n    return np.array(sequences)\ndef train_lstm_model(data, seq_length=60, epochs=50, batch_size=32):\n    scaler = MinMaxScaler()\n    scaled_data = scaler.fit_transform(data.reshape(-1, 1))\n    X, y = create_sequences(scaled_data, seq_length), scaled_data[seq_length:]",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "train_lstm_model",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def train_lstm_model(data, seq_length=60, epochs=50, batch_size=32):\n    scaler = MinMaxScaler()\n    scaled_data = scaler.fit_transform(data.reshape(-1, 1))\n    X, y = create_sequences(scaled_data, seq_length), scaled_data[seq_length:]\n    X = X.reshape((X.shape[0], X.shape[1], 1))\n    model = Sequential([\n        LSTM(50, return_sequences=True, input_shape=(seq_length, 1)),\n        LSTM(50, return_sequences=False),\n        Dense(1)\n    ])",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "predict_next_day",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def predict_next_day(model, data, scaler, seq_length=60):\n    last_sequence = data[-seq_length:].reshape(1, seq_length, 1)\n    predicted = model.predict(last_sequence)\n    return scaler.inverse_transform(predicted)[0, 0]\ndef fetch_news(ticker):\n    # Find and use a proper news API\n    url = f\"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_API_KEY\"\n    response = requests.get(url)\n    if response.status_code == 200:\n        return response.json()['articles']",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "fetch_news",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def fetch_news(ticker):\n    # Find and use a proper news API\n    url = f\"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_API_KEY\"\n    response = requests.get(url)\n    if response.status_code == 200:\n        return response.json()['articles']\n    return []\ndef analyze_sentiment(text):\n    sia = SentimentIntensityAnalyzer()\n    return sia.polarity_scores(text)['compound']",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_sentiment",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def analyze_sentiment(text):\n    sia = SentimentIntensityAnalyzer()\n    return sia.polarity_scores(text)['compound']\ndef main():\n    st.title('NVIDIA Stock Analysis and Prediction')\n    ticker = st.sidebar.text_input('Stock Ticker', value='NVDA')\n    start_date = st.sidebar.date_input('Start Date', datetime.now() - timedelta(days=365))\n    end_date = st.sidebar.date_input('End Date', datetime.now())\n    df = fetch_stock_data(ticker, start_date, end_date)\n    df = calculate_technical_indicators(df)",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def main():\n    st.title('NVIDIA Stock Analysis and Prediction')\n    ticker = st.sidebar.text_input('Stock Ticker', value='NVDA')\n    start_date = st.sidebar.date_input('Start Date', datetime.now() - timedelta(days=365))\n    end_date = st.sidebar.date_input('End Date', datetime.now())\n    df = fetch_stock_data(ticker, start_date, end_date)\n    df = calculate_technical_indicators(df)\n    st.subheader('Stock Data')\n    st.dataframe(df.tail())\n    st.plotly_chart(plot_stock_data(df))",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    }
+]
