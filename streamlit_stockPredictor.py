@@ -4,7 +4,6 @@ import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
-from sklearn.linear_model import LinearRegression
 
 def fetch_stock_data(ticker, start_date, end_date):
     try:
@@ -25,19 +24,31 @@ def calculate_technical_indicators(df):
     df['Volatility'] = df['Daily_Return'].rolling(window=20).std() * np.sqrt(252)
     return df
 
+def simple_linear_regression(x, y):
+    n = len(x)
+    sum_x = sum(x)
+    sum_y = sum(y)
+    sum_xy = sum([x[i] * y[i] for i in range(n)])
+    sum_xx = sum([x[i] ** 2 for i in range(n)])
+    
+    slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x ** 2)
+    intercept = (sum_y - slope * sum_x) / n
+    
+    return slope, intercept
+
 def predict_future_prices(df, days=30, manual_volatility=None, manual_trend=None):
-    X = np.array(range(len(df))).reshape(-1, 1)
+    x = np.array(range(len(df)))
     y = df['Close'].values
-    model = LinearRegression()
-    model.fit(X, y)
+    
+    slope, intercept = simple_linear_regression(x, y)
     
     last_date = df.index[-1]
     future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days)
-    future_X = np.array(range(len(df), len(df) + days)).reshape(-1, 1)
-    future_prices = model.predict(future_X)
+    future_x = np.array(range(len(df), len(df) + days))
+    future_prices = slope * future_x + intercept
     
     if manual_volatility is not None:
-        noise = np.random.normal(0, manual_volatility, days)
+        noise = np.random.normal(0, manual_volatility * df['Close'].iloc[-1], days)
         future_prices += noise
     
     if manual_trend is not None:
@@ -68,7 +79,7 @@ def plot_stock_data_with_predictions(df, future_df, future_df_manual=None):
 def calculate_volatility(df):
     return df['Volatility'].iloc[-1]
 
-def predict_price_change(df, days, future_df):
+def predict_price_change(df, future_df):
     current_price = df['Close'].iloc[-1]
     predicted_price = future_df['Predicted_Close'].iloc[-1]
     percentage_change = ((predicted_price - current_price) / current_price) * 100
@@ -121,7 +132,7 @@ def analyze_competition(stock):
         return f"Unable to analyze competition due to an error: {str(e)}"
 
 def main():
-    st.title('Advanced Stock Analysis and Prediction with Manual Input')
+    st.title('Simplified Stock Analysis and Prediction with Manual Input')
     
     ticker = st.sidebar.text_input('Stock Ticker', value='AAPL')
     start_date = st.sidebar.date_input('Start Date', datetime.now() - timedelta(days=365))
@@ -163,11 +174,11 @@ def main():
         volatility = calculate_volatility(df)
         st.write(f"Current Volatility: {volatility:.2%}")
         
-        price_change_auto = predict_price_change(df, prediction_days, future_df_auto)
+        price_change_auto = predict_price_change(df, future_df_auto)
         st.write(f"Predicted price change (Auto) in the next {prediction_days} days: {price_change_auto:.2f}%")
         
         if use_manual_input:
-            price_change_manual = predict_price_change(df, prediction_days, future_df_manual)
+            price_change_manual = predict_price_change(df, future_df_manual)
             st.write(f"Predicted price change (Manual) in the next {prediction_days} days: {price_change_manual:.2f}%")
         
         st.subheader('Company Future Analysis')
