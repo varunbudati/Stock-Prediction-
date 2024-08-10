@@ -61,30 +61,6 @@
         "documentation": {}
     },
     {
-        "label": "MinMaxScaler",
-        "importPath": "sklearn.preprocessing",
-        "description": "sklearn.preprocessing",
-        "isExtraImport": true,
-        "detail": "sklearn.preprocessing",
-        "documentation": {}
-    },
-    {
-        "label": "train_test_split",
-        "importPath": "sklearn.model_selection",
-        "description": "sklearn.model_selection",
-        "isExtraImport": true,
-        "detail": "sklearn.model_selection",
-        "documentation": {}
-    },
-    {
-        "label": "RandomForestRegressor",
-        "importPath": "sklearn.ensemble",
-        "description": "sklearn.ensemble",
-        "isExtraImport": true,
-        "detail": "sklearn.ensemble",
-        "documentation": {}
-    },
-    {
         "label": "SentimentIntensityAnalyzer",
         "importPath": "nltk.sentiment",
         "description": "nltk.sentiment",
@@ -115,7 +91,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def fetch_stock_data(ticker, start_date, end_date):\n    stock_data = yf.download(ticker, start=start_date, end=end_date)\n    return stock_data\ndef calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    delta = df['Close'].diff()\n    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()\n    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()\n    rs = gain / loss",
+        "peekOfCode": "def fetch_stock_data(ticker, start_date, end_date):\n    stock_data = yf.download(ticker, start=start_date, end=end_date)\n    return stock_data\ndef calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    return df\ndef plot_stock_data(df):\n    fig = go.Figure()\n    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -124,7 +100,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    delta = df['Close'].diff()\n    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()\n    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()\n    rs = gain / loss\n    df['RSI'] = 100 - (100 / (1 + rs))\n    return df\ndef plot_stock_data(df):",
+        "peekOfCode": "def calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    return df\ndef plot_stock_data(df):\n    fig = go.Figure()\n    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))\n    fig.update_layout(title='Stock Price and Moving Averages', xaxis_title='Date', yaxis_title='Price')",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -133,25 +109,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def plot_stock_data(df):\n    fig = go.Figure()\n    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))\n    fig.update_layout(title='Stock Price and Moving Averages', xaxis_title='Date', yaxis_title='Price')\n    return fig\ndef prepare_data_for_model(df):\n    df['Date'] = df.index\n    df['Date'] = pd.to_datetime(df['Date'])",
-        "detail": "streamlit_stockPredictor",
-        "documentation": {}
-    },
-    {
-        "label": "prepare_data_for_model",
-        "kind": 2,
-        "importPath": "streamlit_stockPredictor",
-        "description": "streamlit_stockPredictor",
-        "peekOfCode": "def prepare_data_for_model(df):\n    df['Date'] = df.index\n    df['Date'] = pd.to_datetime(df['Date'])\n    df['Day'] = df['Date'].dt.day\n    df['Month'] = df['Date'].dt.month\n    df['Year'] = df['Date'].dt.year\n    df['Weekday'] = df['Date'].dt.weekday\n    features = ['Open', 'High', 'Low', 'Volume', 'SMA20', 'SMA50', 'RSI', 'Day', 'Month', 'Year', 'Weekday']\n    X = df[features]\n    y = df['Close']",
-        "detail": "streamlit_stockPredictor",
-        "documentation": {}
-    },
-    {
-        "label": "train_random_forest_model",
-        "kind": 2,
-        "importPath": "streamlit_stockPredictor",
-        "description": "streamlit_stockPredictor",
-        "peekOfCode": "def train_random_forest_model(X, y):\n    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n    model = RandomForestRegressor(n_estimators=100, random_state=42)\n    model.fit(X_train, y_train)\n    return model\ndef predict_next_day(model, last_data):\n    return model.predict(last_data)\ndef fetch_news(ticker):\n    # This is a placeholder. In a real app, you'd use a proper news API\n    url = f\"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_API_KEY\"",
+        "peekOfCode": "def plot_stock_data(df):\n    fig = go.Figure()\n    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))\n    fig.update_layout(title='Stock Price and Moving Averages', xaxis_title='Date', yaxis_title='Price')\n    return fig\ndef predict_next_day(df):\n    last_price = df['Close'].iloc[-1]\n    sma20 = df['SMA20'].iloc[-1]",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -160,7 +118,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def predict_next_day(model, last_data):\n    return model.predict(last_data)\ndef fetch_news(ticker):\n    # This is a placeholder. In a real app, you'd use a proper news API\n    url = f\"https://newsapi.org/v2/everything?q={ticker}&apiKey=YOUR_API_KEY\"\n    response = requests.get(url)\n    if response.status_code == 200:\n        return response.json()['articles']\n    return []\ndef analyze_sentiment(text):",
+        "peekOfCode": "def predict_next_day(df):\n    last_price = df['Close'].iloc[-1]\n    sma20 = df['SMA20'].iloc[-1]\n    sma50 = df['SMA50'].iloc[-1]\n    # Simple prediction based on the difference between SMAs\n    if sma20 > sma50:\n        prediction = last_price * 1.01  # Predict 1% increase\n    else:\n        prediction = last_price * 0.99  # Predict 1% decrease\n    return prediction",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },

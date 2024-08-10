@@ -4,9 +4,6 @@ import numpy as np
 import yfinance as yf
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
 from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
 import requests
@@ -22,12 +19,6 @@ def calculate_technical_indicators(df):
     df['SMA20'] = df['Close'].rolling(window=20).mean()
     df['SMA50'] = df['Close'].rolling(window=50).mean()
     
-    delta = df['Close'].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-    rs = gain / loss
-    df['RSI'] = 100 - (100 / (1 + rs))
-    
     return df
 
 def plot_stock_data(df):
@@ -38,28 +29,18 @@ def plot_stock_data(df):
     fig.update_layout(title='Stock Price and Moving Averages', xaxis_title='Date', yaxis_title='Price')
     return fig
 
-def prepare_data_for_model(df):
-    df['Date'] = df.index
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['Day'] = df['Date'].dt.day
-    df['Month'] = df['Date'].dt.month
-    df['Year'] = df['Date'].dt.year
-    df['Weekday'] = df['Date'].dt.weekday
+def predict_next_day(df):
+    last_price = df['Close'].iloc[-1]
+    sma20 = df['SMA20'].iloc[-1]
+    sma50 = df['SMA50'].iloc[-1]
     
-    features = ['Open', 'High', 'Low', 'Volume', 'SMA20', 'SMA50', 'RSI', 'Day', 'Month', 'Year', 'Weekday']
-    X = df[features]
-    y = df['Close']
+    # Simple prediction based on the difference between SMAs
+    if sma20 > sma50:
+        prediction = last_price * 1.01  # Predict 1% increase
+    else:
+        prediction = last_price * 0.99  # Predict 1% decrease
     
-    return X, y
-
-def train_random_forest_model(X, y):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    return model
-
-def predict_next_day(model, last_data):
-    return model.predict(last_data)
+    return prediction
 
 def fetch_news(ticker):
     # This is a placeholder. In a real app, you'd use a proper news API
@@ -88,18 +69,11 @@ def main():
     
     st.plotly_chart(plot_stock_data(df))
     
-    st.subheader('Relative Strength Index (RSI)')
-    st.line_chart(df['RSI'])
-    
-    # Random Forest Prediction
+    # Simple Moving Average Prediction
     st.subheader('Stock Price Prediction')
-    if st.button('Train Model and Predict'):
-        X, y = prepare_data_for_model(df)
-        model = train_random_forest_model(X, y)
-        last_data = X.iloc[-1:].copy()
-        last_data['Day'] += 1  # Predict for the next day
-        next_day_price = predict_next_day(model, last_data)
-        st.write(f"Predicted price for next trading day: ${next_day_price[0]:.2f}")
+    if st.button('Predict Next Day Price'):
+        next_day_price = predict_next_day(df)
+        st.write(f"Predicted price for next trading day: ${next_day_price:.2f}")
     
     # News Sentiment Analysis
     st.subheader('News Sentiment Analysis')
