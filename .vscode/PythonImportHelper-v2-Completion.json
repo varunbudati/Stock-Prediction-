@@ -27,6 +27,15 @@
         "documentation": {}
     },
     {
+        "label": "yfinance",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "yfinance",
+        "description": "yfinance",
+        "detail": "yfinance",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -52,20 +61,27 @@
         "documentation": {}
     },
     {
-        "label": "random",
-        "kind": 6,
+        "label": "LinearRegression",
+        "importPath": "sklearn.linear_model",
+        "description": "sklearn.linear_model",
         "isExtraImport": true,
-        "importPath": "random",
-        "description": "random",
-        "detail": "random",
+        "detail": "sklearn.linear_model",
         "documentation": {}
     },
     {
-        "label": "generate_mock_stock_data",
+        "label": "norm",
+        "importPath": "scipy.stats",
+        "description": "scipy.stats",
+        "isExtraImport": true,
+        "detail": "scipy.stats",
+        "documentation": {}
+    },
+    {
+        "label": "fetch_stock_data",
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def generate_mock_stock_data(ticker, start_date, end_date):\n    date_range = pd.date_range(start=start_date, end=end_date)\n    close_prices = [100]  # Start with a base price of 100\n    for _ in range(1, len(date_range)):\n        change = random.uniform(-2, 2)  # Random daily change between -2% and 2%\n        close_prices.append(close_prices[-1] * (1 + change/100))\n    data = {\n        'Date': date_range,\n        'Open': close_prices,\n        'High': [price * random.uniform(1, 1.02) for price in close_prices],",
+        "peekOfCode": "def fetch_stock_data(ticker, start_date, end_date):\n    stock = yf.Ticker(ticker)\n    df = stock.history(start=start_date, end=end_date)\n    return df, stock\ndef calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    df['Daily_Return'] = df['Close'].pct_change()\n    df['Volatility'] = df['Daily_Return'].rolling(window=20).std() * np.sqrt(252)\n    return df",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -74,7 +90,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    return df\ndef predict_future_prices(df, days=30):\n    last_date = df.index[-1]\n    future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days)\n    predictions = []\n    current_price = df['Close'].iloc[-1]\n    sma20 = df['SMA20'].iloc[-1]",
+        "peekOfCode": "def calculate_technical_indicators(df):\n    df['SMA20'] = df['Close'].rolling(window=20).mean()\n    df['SMA50'] = df['Close'].rolling(window=50).mean()\n    df['Daily_Return'] = df['Close'].pct_change()\n    df['Volatility'] = df['Daily_Return'].rolling(window=20).std() * np.sqrt(252)\n    return df\ndef predict_future_prices(df, days=30):\n    X = np.array(range(len(df))).reshape(-1, 1)\n    y = df['Close'].values\n    model = LinearRegression()",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -83,7 +99,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def predict_future_prices(df, days=30):\n    last_date = df.index[-1]\n    future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days)\n    predictions = []\n    current_price = df['Close'].iloc[-1]\n    sma20 = df['SMA20'].iloc[-1]\n    sma50 = df['SMA50'].iloc[-1]\n    for _ in range(days):\n        if sma20 > sma50:\n            prediction = current_price * 1.01  # Predict 1% increase",
+        "peekOfCode": "def predict_future_prices(df, days=30):\n    X = np.array(range(len(df))).reshape(-1, 1)\n    y = df['Close'].values\n    model = LinearRegression()\n    model.fit(X, y)\n    last_date = df.index[-1]\n    future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days)\n    future_X = np.array(range(len(df), len(df) + days)).reshape(-1, 1)\n    future_prices = model.predict(future_X)\n    future_df = pd.DataFrame({",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -92,25 +108,43 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def plot_stock_data_with_predictions(df, future_df):\n    fig = go.Figure()\n    # Plot historical data\n    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))\n    # Plot predictions\n    fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Predicted_Close'], name='Predictions', line=dict(color='red', dash='dash')))\n    fig.update_layout(title='Stock Price, Moving Averages, and Predictions', xaxis_title='Date', yaxis_title='Price')\n    return fig",
+        "peekOfCode": "def plot_stock_data_with_predictions(df, future_df):\n    fig = go.Figure()\n    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))\n    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))\n    fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Predicted_Close'], name='Predictions', line=dict(color='red', dash='dash')))\n    fig.update_layout(title='Stock Price, Moving Averages, and Predictions', xaxis_title='Date', yaxis_title='Price')\n    return fig\ndef calculate_volatility(df):\n    return df['Volatility'].iloc[-1]",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
     {
-        "label": "generate_mock_news",
+        "label": "calculate_volatility",
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def generate_mock_news(ticker):\n    news_templates = [\n        f\"{ticker} stock sees unexpected surge\",\n        f\"Analysts predict bright future for {ticker}\",\n        f\"{ticker} announces new product line\",\n        f\"Market uncertainty affects {ticker} performance\",\n        f\"{ticker} reports quarterly earnings\"\n    ]\n    return [{'title': random.choice(news_templates)} for _ in range(5)]\ndef simple_sentiment_analysis(text):",
+        "peekOfCode": "def calculate_volatility(df):\n    return df['Volatility'].iloc[-1]\ndef predict_price_change(df, days):\n    current_price = df['Close'].iloc[-1]\n    predicted_price = predict_future_prices(df, days)['Predicted_Close'].iloc[-1]\n    percentage_change = ((predicted_price - current_price) / current_price) * 100\n    return percentage_change\ndef analyze_company_future(stock):\n    info = stock.info\n    outlook = \"The company's future looks \"",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
     {
-        "label": "simple_sentiment_analysis",
+        "label": "predict_price_change",
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def simple_sentiment_analysis(text):\n    positive_words = ['surge', 'bright', 'new', 'earnings']\n    negative_words = ['uncertainty', 'affects']\n    words = text.lower().split()\n    positive_count = sum(word in positive_words for word in words)\n    negative_count = sum(word in negative_words for word in words)\n    if positive_count > negative_count:\n        return 1\n    elif negative_count > positive_count:\n        return -1",
+        "peekOfCode": "def predict_price_change(df, days):\n    current_price = df['Close'].iloc[-1]\n    predicted_price = predict_future_prices(df, days)['Predicted_Close'].iloc[-1]\n    percentage_change = ((predicted_price - current_price) / current_price) * 100\n    return percentage_change\ndef analyze_company_future(stock):\n    info = stock.info\n    outlook = \"The company's future looks \"\n    if info['recommendationKey'] in ['buy', 'strongBuy']:\n        outlook += \"promising. Analysts recommend buying the stock. \"",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_company_future",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def analyze_company_future(stock):\n    info = stock.info\n    outlook = \"The company's future looks \"\n    if info['recommendationKey'] in ['buy', 'strongBuy']:\n        outlook += \"promising. Analysts recommend buying the stock. \"\n    elif info['recommendationKey'] in ['sell', 'strongSell']:\n        outlook += \"challenging. Analysts recommend selling the stock. \"\n    else:\n        outlook += \"stable. Analysts recommend holding the stock. \"\n    outlook += f\"The company has a market cap of ${info['marketCap']:,} and a P/E ratio of {info.get('trailingPE', 'N/A')}. \"",
+        "detail": "streamlit_stockPredictor",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_competition",
+        "kind": 2,
+        "importPath": "streamlit_stockPredictor",
+        "description": "streamlit_stockPredictor",
+        "peekOfCode": "def analyze_competition(stock):\n    info = stock.info\n    sector = info['sector']\n    industry = info['industry']\n    competition = f\"The company operates in the {sector} sector, specifically in the {industry} industry. \"\n    if 'companyOfficers' in info:\n        competition += f\"It has {len(info['companyOfficers'])} key executives. \"\n    if 'fullTimeEmployees' in info:\n        competition += f\"The company has {info['fullTimeEmployees']:,} full-time employees. \"\n    competition += \"Competition level is considered \"",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     },
@@ -119,7 +153,7 @@
         "kind": 2,
         "importPath": "streamlit_stockPredictor",
         "description": "streamlit_stockPredictor",
-        "peekOfCode": "def main():\n    st.title('Stock Analysis and Prediction (Mock Data)')\n    ticker = st.sidebar.text_input('Stock Ticker', value='MOCK')\n    start_date = st.sidebar.date_input('Start Date', datetime.now() - timedelta(days=365))\n    end_date = st.sidebar.date_input('End Date', datetime.now())\n    df = generate_mock_stock_data(ticker, start_date, end_date)\n    df = calculate_technical_indicators(df)\n    future_df = predict_future_prices(df)\n    st.subheader('Stock Data (Mock)')\n    st.dataframe(df.tail())",
+        "peekOfCode": "def main():\n    st.title('Advanced Stock Analysis and Prediction')\n    ticker = st.sidebar.text_input('Stock Ticker', value='AAPL')\n    start_date = st.sidebar.date_input('Start Date', datetime.now() - timedelta(days=365))\n    end_date = st.sidebar.date_input('End Date', datetime.now())\n    df, stock = fetch_stock_data(ticker, start_date, end_date)\n    df = calculate_technical_indicators(df)\n    future_df = predict_future_prices(df)\n    st.subheader('Stock Data')\n    st.dataframe(df.tail())",
         "detail": "streamlit_stockPredictor",
         "documentation": {}
     }
