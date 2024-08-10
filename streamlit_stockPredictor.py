@@ -29,25 +29,48 @@ def calculate_technical_indicators(df):
     df['SMA50'] = df['Close'].rolling(window=50).mean()
     return df
 
-def plot_stock_data(df):
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))
-    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))
-    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))
-    fig.update_layout(title='Stock Price and Moving Averages', xaxis_title='Date', yaxis_title='Price')
-    return fig
-
-def predict_next_day(df):
-    last_price = df['Close'].iloc[-1]
+def predict_future_prices(df, days=30):
+    last_date = df.index[-1]
+    future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days)
+    
+    predictions = []
+    current_price = df['Close'].iloc[-1]
     sma20 = df['SMA20'].iloc[-1]
     sma50 = df['SMA50'].iloc[-1]
     
-    if sma20 > sma50:
-        prediction = last_price * 1.01  # Predict 1% increase
-    else:
-        prediction = last_price * 0.99  # Predict 1% decrease
+    for _ in range(days):
+        if sma20 > sma50:
+            prediction = current_price * 1.01  # Predict 1% increase
+        else:
+            prediction = current_price * 0.99  # Predict 1% decrease
+        
+        predictions.append(prediction)
+        current_price = prediction
+        
+        # Update SMAs (this is a simplification)
+        sma20 = (sma20 * 19 + current_price) / 20
+        sma50 = (sma50 * 49 + current_price) / 50
     
-    return prediction
+    future_df = pd.DataFrame({
+        'Date': future_dates,
+        'Predicted_Close': predictions
+    })
+    future_df.set_index('Date', inplace=True)
+    return future_df
+
+def plot_stock_data_with_predictions(df, future_df):
+    fig = go.Figure()
+    
+    # Plot historical data
+    fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC'))
+    fig.add_trace(go.Scatter(x=df.index, y=df['SMA20'], name='SMA20'))
+    fig.add_trace(go.Scatter(x=df.index, y=df['SMA50'], name='SMA50'))
+    
+    # Plot predictions
+    fig.add_trace(go.Scatter(x=future_df.index, y=future_df['Predicted_Close'], name='Predictions', line=dict(color='red', dash='dash')))
+    
+    fig.update_layout(title='Stock Price, Moving Averages, and Predictions', xaxis_title='Date', yaxis_title='Price')
+    return fig
 
 def generate_mock_news(ticker):
     news_templates = [
@@ -84,16 +107,15 @@ def main():
     df = generate_mock_stock_data(ticker, start_date, end_date)
     df = calculate_technical_indicators(df)
     
+    future_df = predict_future_prices(df)
+    
     st.subheader('Stock Data (Mock)')
     st.dataframe(df.tail())
     
-    st.plotly_chart(plot_stock_data(df))
+    st.plotly_chart(plot_stock_data_with_predictions(df, future_df))
     
-    # Simple Moving Average Prediction
-    st.subheader('Stock Price Prediction')
-    if st.button('Predict Next Day Price'):
-        next_day_price = predict_next_day(df)
-        st.write(f"Predicted price for next trading day: ${next_day_price:.2f}")
+    st.subheader('Future Price Predictions')
+    st.dataframe(future_df)
     
     # Simple Sentiment Analysis
     st.subheader('News Sentiment Analysis (Mock)')
